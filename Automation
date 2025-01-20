@@ -1,0 +1,122 @@
+alias: Famiglia_Notifica eventi calendario
+description: ""
+triggers:
+  - value_template: >
+      {% set tempo_di_percorrenza =
+      states('sensor.commutetime_evento_calendario') | int(0) %}
+
+      {% set inizio_evento =
+      as_timestamp(state_attr('calendar.your_calendar_gmail_com', 'start_time')) %}
+
+      {% set trigger_time = inizio_evento - (tempo_di_percorrenza + 15) * 60 %}
+
+      {{ now().timestamp() >= trigger_time }}
+    trigger: template
+  - entity_id: calendar.your_calendar_gmail_com
+    attribute: start_time
+    trigger: state
+conditions:
+  - condition: template
+    value_template: >
+      {% set tempo_di_percorrenza =
+      states('sensor.commutetime_evento_calendario') %} {% set ora_attuale =
+      now() %} {% set evento_prossimo =
+      state_attr('calendar.your_calendar_gmail_com', 'start_time') %} {% set
+      ultimo_evento_notificato = states('input_text.ultimo_evento_notificato')
+      %}
+
+      {% if tempo_di_percorrenza not in ['unknown', 'unavailable'] and
+      evento_prossimo %}
+        {% set tempo_di_percorrenza_int = tempo_di_percorrenza | int %}
+        {% set inizio_evento = as_timestamp(strptime(evento_prossimo, '%Y-%m-%d %H:%M:%S')) %}
+        {% set trigger_time = inizio_evento - (tempo_di_percorrenza_int + 15) * 60 %}
+        {% set id_evento = state_attr('calendar.your_calendar_gmail_com', 'message') %}
+        {{ ora_attuale.timestamp() >= trigger_time and id_evento != ultimo_evento_notificato }}
+      {% else %}
+        {% set inizio_evento = as_timestamp(strptime(evento_prossimo, '%Y-%m-%d %H:%M:%S')) %}
+        {% set trigger_time = inizio_evento - 15 * 60 %}
+        {% set id_evento = state_attr('calendar.your_calendar_gmail_com', 'message') %}
+        {{ ora_attuale.timestamp() >= trigger_time and id_evento != ultimo_evento_notificato }}
+      {% endif %}
+actions:
+  - data:
+      entity_id: input_text.ultimo_evento_notificato
+      value: "{{ state_attr('calendar.your_calendar_gmail_com', 'message') }}"
+    action: input_text.set_value
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: group.famiglia
+            state: home
+          - condition: state
+            entity_id: input_select.orario
+            state: Veglia
+        sequence:
+          - action: script.speaker_notifica_tts_con_presenza_casa
+            metadata: {}
+            data:
+              message: >-
+                {{ [
+                    'Signore, mi scusi per l\'intrusione, ma',
+                    'Signore, scusi se interrompo, ma',
+                    'Signore, odio dover interrompere, ma',
+                    'Signore, chiedo perdono in anticipo, ma',
+                    'Signore, mi scuso per l\'interruzione, ma',
+                    'Signore, chiedo scusa per l\'interruzione, ma',
+                    'Signore, scusi se la disturbo, ma',
+                    'Signore, mi scuso per aver interrotto i suoi pensieri, ma',
+                    'Mi perdoni l\'interruzione, Signore, ma',
+                    'Signore, temo di dover interrompere, ma',
+                    'Signore, non vorrei disturbare, però',
+                    'Chiedo scusa per l\'intromissione, Signore, tuttavia vorrei avvisarla che',
+                    'Signore, con il dovuto rispetto,',
+                    'Signore, con il suo permesso,',
+                    'Signore, la prego di concedermi un momento perché',
+                    'Signore, mi rendo conto che è occupato, ma',
+                    'Signore, so che non è il momento migliore, ma',
+                    'Signore, mi perdoni se la disturbo, ma',
+                    'Mi consenta un attimo della sua attenzione, Signore, poiché',
+                    'Signore, mi permetto un attimo della sua attenzione, perché',
+                    'Signore, chiedo gentilmente un momento d\'attenzione, perché',
+                    'Una piccola interruzione, Signore, se posso permettermi',
+                    'Mi dispiace interrompere, Signore, ma è necessario un attimo della sua attenzione.',
+                    'Con rispetto, Signore, devo attirare la sua attenzione su un tema che la riguarda.'
+                    ] | random }}
+                Vorrei ricordare l'evento "{{
+                state_attr('calendar.your_calendar_gmail_com', 'message') }}" {% if
+                state_attr('calendar.your_calendar_gmail_com', 'location') %}
+                  presso {{ state_attr('calendar.your_calendar_gmail_com', 'location').split(',')[0] }}
+                {% endif %} che comincerà fra {% if
+                states('sensor.commutetime_evento_calendario') not in
+                ['unknown', 'unavailable'] %}
+                  {{ states('sensor.commutetime_evento_calendario') | int + 15 }} minuti. Suggerisco di prepararsi ad uscire dato che il tempo di percorrenza previsto è pari a {{ states('sensor.commutetime_evento_calendario') }} minuti.
+                {% else %}
+                  15 minuti
+                {% endif %}     
+      - conditions:
+          - condition: or
+            conditions:
+              - condition: state
+                entity_id: group.famiglia
+                state: not_home
+              - condition: state
+                entity_id: input_select.orario
+                state: Riposo
+        sequence:
+          - action: script.prova_fields
+            metadata: {}
+            data:
+              title: Prossimo impegno
+              message: >-
+                Signore, vorrei ricordare l'evento "{{
+                state_attr('calendar.your_calendar_gmail_com', 'message') }}" {% if
+                state_attr('calendar.your_calendar_gmail_com', 'location') %}
+                  presso {{ state_attr('calendar.your_calendar_gmail_com', 'location').split(',')[0] }}
+                {% endif %} che comincerà fra {% if
+                states('sensor.commutetime_evento_calendario') not in
+                ['unknown', 'unavailable'] %}
+                  {{ states('sensor.commutetime_evento_calendario') | int + 15 }} minuti. Suggerisco di prepararsi a partire dato che il tempo di percorrenza previsto è pari a {{ states('sensor.commutetime_evento_calendario') }} minuti.
+                {% else %}
+                  15 minuti
+                {% endif %}
+mode: single
