@@ -6,4 +6,5 @@ The following integrations are propedeutical for doing that:
 - Google Maps Travel Time
 
 So I created "sensor.commutetime_evento_calendario" in Google Maps Travel Time to record the commute time from my current location to the next calendar event one.
+Then I integrated everything in the automation.
 
