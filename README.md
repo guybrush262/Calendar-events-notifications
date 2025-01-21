@@ -1,6 +1,8 @@
 I created an automation that checks my calendars event and:
-- if I am home and it's "day" time, it advises me on the home speaker (I uses a separated script, because in this way it advises me in the room that I am thanks to the presence detection sensors), or
-- I'm not at home or it's night time, it advises me on the phone app
+- If I am home and it's "day" time, it advises me on the home speaker (I uses a separated script, because in this way it advises me in the room that I am thanks to the presence detection sensors)
+   or
+- I'm not at home or it's night time, it advises me on the phone app.
+
 In particular, if a location is reported in the calendar event, than the notification is done 15min + commute time before the event start time, otherwise just 15min before the event start time.
 
 The following integrations are propedeutical for doing that:
@@ -12,6 +14,7 @@ So I created:
 - "sensor.commutetime_evento_calendario" in Google Maps Travel Time to record the commute time from my current location to the next calendar event one.
    
 Then I integrated everything in the automation.
+
 
 Ancillary scripts that I use are:
 - script.assistente_interruzioni_vocali (introduction message to the notification)
