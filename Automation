@@ -1,4 +1,4 @@
-alias: Famiglia_Notifica eventi calendario
+alias: Notifica eventi calendario
 description: ""
 triggers:
   - value_template: >
