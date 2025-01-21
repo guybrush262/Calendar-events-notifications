@@ -56,32 +56,7 @@ actions:
             metadata: {}
             data:
               message: >-
-                {{ [
-                    'Signore, mi scusi per l\'intrusione, ma',
-                    'Signore, scusi se interrompo, ma',
-                    'Signore, odio dover interrompere, ma',
-                    'Signore, chiedo perdono in anticipo, ma',
-                    'Signore, mi scuso per l\'interruzione, ma',
-                    'Signore, chiedo scusa per l\'interruzione, ma',
-                    'Signore, scusi se la disturbo, ma',
-                    'Signore, mi scuso per aver interrotto i suoi pensieri, ma',
-                    'Mi perdoni l\'interruzione, Signore, ma',
-                    'Signore, temo di dover interrompere, ma',
-                    'Signore, non vorrei disturbare, però',
-                    'Chiedo scusa per l\'intromissione, Signore, tuttavia vorrei avvisarla che',
-                    'Signore, con il dovuto rispetto,',
-                    'Signore, con il suo permesso,',
-                    'Signore, la prego di concedermi un momento perché',
-                    'Signore, mi rendo conto che è occupato, ma',
-                    'Signore, so che non è il momento migliore, ma',
-                    'Signore, mi perdoni se la disturbo, ma',
-                    'Mi consenta un attimo della sua attenzione, Signore, poiché',
-                    'Signore, mi permetto un attimo della sua attenzione, perché',
-                    'Signore, chiedo gentilmente un momento d\'attenzione, perché',
-                    'Una piccola interruzione, Signore, se posso permettermi',
-                    'Mi dispiace interrompere, Signore, ma è necessario un attimo della sua attenzione.',
-                    'Con rispetto, Signore, devo attirare la sua attenzione su un tema che la riguarda.'
-                    ] | random }}
+                {{ (state_attr('script.assistente_interruzioni_vocali', 'return_value') | default('Signore')) }}
                 Vorrei ricordare l'evento "{{
                 state_attr('calendar.your_calendar_gmail_com', 'message') }}" {% if
                 state_attr('calendar.your_calendar_gmail_com', 'location') %}
@@ -103,7 +78,7 @@ actions:
                 entity_id: input_select.orario
                 state: Riposo
         sequence:
-          - action: script.prova_fields
+          - action: script.smartphone_notification
             metadata: {}
             data:
               title: Prossimo impegno
