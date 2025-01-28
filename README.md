@@ -1,4 +1,4 @@
-The automation that checks my calendars event and:
+The automation checks my calendars event and:
 - If I am home and it's "day" time, it advises me on the home speaker (I uses a separated script, because in this way it advises me in the room that I am thanks to the presence detection sensors); or
 - I'm not at home or it's night time, it advises me on the phone app.
 
