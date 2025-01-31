@@ -2,13 +2,13 @@ alias: Notifica eventi calendario
 description: ""
 triggers:
   - value_template: >
-      {% set tempo_di_percorrenza =
-      states('sensor.commutetime_evento_calendario') | int(0) %}
+      {% set commute_time =
+      states('sensor.commutetime_calendar_event) | int(0) %}
 
-      {% set inizio_evento =
+      {% set event_start =
       as_timestamp(state_attr('calendar.your_calendar_gmail_com', 'start_time')) %}
 
-      {% set trigger_time = inizio_evento - (tempo_di_percorrenza + 15) * 60 %}
+      {% set trigger_time = event_start - (commute_time + 15) * 60 %}
 
       {{ now().timestamp() >= trigger_time }}
     trigger: template
@@ -18,80 +18,80 @@ triggers:
 conditions:
   - condition: template
     value_template: >
-      {% set tempo_di_percorrenza =
-      states('sensor.commutetime_evento_calendario') %} {% set ora_attuale =
-      now() %} {% set evento_prossimo =
+      {% set commute_time =
+      states('sensor.commutetime_calendar_event') %} {% set current_time =
+      now() %} {% set next_event =
       state_attr('calendar.your_calendar_gmail_com', 'start_time') %} {% set
-      ultimo_evento_notificato = states('input_text.ultimo_evento_notificato')
+      last_notified_event = states('input_text.last_notified_event')
       %}
 
-      {% if tempo_di_percorrenza not in ['unknown', 'unavailable'] and
-      evento_prossimo %}
-        {% set tempo_di_percorrenza_int = tempo_di_percorrenza | int %}
-        {% set inizio_evento = as_timestamp(strptime(evento_prossimo, '%Y-%m-%d %H:%M:%S')) %}
-        {% set trigger_time = inizio_evento - (tempo_di_percorrenza_int + 15) * 60 %}
-        {% set id_evento = state_attr('calendar.your_calendar_gmail_com', 'message') %}
-        {{ ora_attuale.timestamp() >= trigger_time and id_evento != ultimo_evento_notificato }}
+      {% if commute_time not in ['unknown', 'unavailable'] and
+      next_event %}
+        {% set commute_time_int = commute_time | int %}
+        {% set event_start = as_timestamp(strptime(next_event, '%Y-%m-%d %H:%M:%S')) %}
+        {% set trigger_time = event_start - (commute_time_int + 15) * 60 %}
+        {% set id_event = state_attr('calendar.your_calendar_gmail_com', 'message') %}
+        {{ current_time.timestamp() >= trigger_time and id_event != last_notified_event }}
       {% else %}
-        {% set inizio_evento = as_timestamp(strptime(evento_prossimo, '%Y-%m-%d %H:%M:%S')) %}
-        {% set trigger_time = inizio_evento - 15 * 60 %}
-        {% set id_evento = state_attr('calendar.your_calendar_gmail_com', 'message') %}
-        {{ ora_attuale.timestamp() >= trigger_time and id_evento != ultimo_evento_notificato }}
+        {% set event_start = as_timestamp(strptime(next_event, '%Y-%m-%d %H:%M:%S')) %}
+        {% set trigger_time = event_start - 15 * 60 %}
+        {% set id_event = state_attr('calendar.your_calendar_gmail_com', 'message') %}
+        {{ current_time.timestamp() >= trigger_time and id_event != last_notified_event }}
       {% endif %}
 actions:
   - data:
-      entity_id: input_text.ultimo_evento_notificato
+      entity_id: input_text.last_notified_event
       value: "{{ state_attr('calendar.your_calendar_gmail_com', 'message') }}"
     action: input_text.set_value
   - choose:
       - conditions:
           - condition: state
-            entity_id: group.famiglia
+            entity_id: group.family
             state: home
           - condition: state
-            entity_id: input_select.orario
-            state: Veglia
+            entity_id: input_select.time
+            state: Day
         sequence:
           - action: script.speaker_notifica_tts_con_presenza_casa
             metadata: {}
             data:
               message: >-
-                {{ (state_attr('script.assistente_interruzioni_vocali', 'return_value') | default('Signore')) }}
-                Vorrei ricordare l'evento "{{
+                {{ (state_attr('script.assistente_interruzioni_vocali', 'return_value') | default('Sir')) }}
+                I would like to remind "{{
                 state_attr('calendar.your_calendar_gmail_com', 'message') }}" {% if
                 state_attr('calendar.your_calendar_gmail_com', 'location') %}
-                  presso {{ state_attr('calendar.your_calendar_gmail_com', 'location').split(',')[0] }}
-                {% endif %} che comincerà fra {% if
-                states('sensor.commutetime_evento_calendario') not in
+                  at {{ state_attr('calendar.your_calendar_gmail_com', 'location').split(',')[0] }}
+                {% endif %} that will start in {% if
+                states('sensor.commutetime_calendar_event') not in
                 ['unknown', 'unavailable'] %}
-                  {{ states('sensor.commutetime_evento_calendario') | int + 15 }} minuti. Suggerisco di prepararsi ad uscire dato che il tempo di percorrenza previsto è pari a {{ states('sensor.commutetime_evento_calendario') }} minuti.
+                  {{ states('sensor.commutetime_calendar_event') | int + 15 }} minutes. I suggest getting ready to go since the expected travel time is {{ states('sensor.commutetime_evento_calendario') }} minutes.
                 {% else %}
-                  15 minuti
+                  15 minutes
                 {% endif %}     
       - conditions:
           - condition: or
             conditions:
               - condition: state
-                entity_id: group.famiglia
+                entity_id: group.family
                 state: not_home
               - condition: state
-                entity_id: input_select.orario
-                state: Riposo
+                entity_id: input_select.time
+                state: Night
         sequence:
           - action: script.smartphone_notification
             metadata: {}
             data:
-              title: Prossimo impegno
+              title: Next Event
               message: >-
-                Signore, vorrei ricordare l'evento "{{
+                Sir, I would like to remind "{{
                 state_attr('calendar.your_calendar_gmail_com', 'message') }}" {% if
                 state_attr('calendar.your_calendar_gmail_com', 'location') %}
-                  presso {{ state_attr('calendar.your_calendar_gmail_com', 'location').split(',')[0] }}
-                {% endif %} che comincerà fra {% if
-                states('sensor.commutetime_evento_calendario') not in
+                  at {{ state_attr('calendar.your_calendar_gmail_com', 'location').split(',')[0] }}
+                {% endif %} that will start in {% if
+                states('sensor.commutetime_calendar_event') not in
                 ['unknown', 'unavailable'] %}
-                  {{ states('sensor.commutetime_evento_calendario') | int + 15 }} minuti. Suggerisco di prepararsi a partire dato che il tempo di percorrenza previsto è pari a {{ states('sensor.commutetime_evento_calendario') }} minuti.
+                  {{ states('sensor.commutetime_calendar_event') | int + 15 }} minutes. I suggest getting ready to go since the expected travel time is {{ states('sensor.commutetime_evento_calendario') }} minutes.
                 {% else %}
-                  15 minuti
+                  15 minutes
                 {% endif %}
 mode: single
