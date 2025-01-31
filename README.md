@@ -1,10 +1,10 @@
 # Caendar Events Notifications in Home Assistant
 
-The automation checks my calendars event and:
+The automation checks the calendar events and:
 - If I am home and it's "day" time, it advises me on the home speaker (I uses a separated script, because in this way it advises me in the room that I am thanks to the presence detection sensors); or
-- I'm not at home or it's night time, it advises me on the phone app.
+- I'm not at home or it's "night" time, it sens me a notification to the phone.
 
-In particular, if a location is reported in the calendar event, than the notification is done 15min + commute time before the event start time, otherwise just 15min before the event start time. This give me 15 minutes to prepare to exit and e.g. if the event location is 23 minutes far by car, the notification would happens 38 minutes before the event start.
+In particular, if a location is reported in the calendar event, than the notification is done 15min + commute time before the event start time, otherwise just 15min before the event start time. This lets me have 15 minutes to prepare to go out: e.g. if the event location is 23 minutes far by car, the notification would happens 38 minutes before the event start.
 
 The following integrations are propedeutical for doing that:
 - Google Calendar
