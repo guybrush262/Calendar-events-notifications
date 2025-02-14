@@ -43,6 +43,29 @@ actions:
       entity_id: input_text.last_notified_event
       value: "{{ state_attr('calendar.your_calendar_gmail_com', 'message') }}"
     action: input_text.set_value
+  - variables:
+      meteo_alert: >
+        {% set condizioni = [] %}
+        {% set meteo = states('weather.pirateweather') %} {% set temperatura =
+        state_attr('weather.pirateweather', 'temperature') | float(99) %}
+
+        {% if meteo == 'rainy' %}
+          {% set condizioni = condizioni + ['pioggia'] %}
+        {% elif meteo == 'fog' %}
+          {% set condizioni = condizioni + ['nebbia'] %}
+        {% elif meteo == 'snowy' %}
+          {% set condizioni = condizioni + ['neve'] %}
+        {% endif %}
+
+        {% if temperatura < 1 %}
+          {% set condizioni = condizioni + ['ghiaccio'] %}
+        {% endif %}
+
+        {% if condizioni | length > 0 %}
+          Attenzione: è prevista {{ condizioni | join(', ') }}.
+        {% else %}
+          ""
+        {% endif %}
   - choose:
       - conditions:
           - condition: state
@@ -64,9 +87,9 @@ actions:
                 {% endif %} that will start in {% if
                 states('sensor.commutetime_calendar_event') not in
                 ['unknown', 'unavailable'] %}
-                  {{ states('sensor.commutetime_calendar_event') | int + 15 }} minutes. I suggest getting ready to go since the expected travel time is {{ states('sensor.commutetime_evento_calendario') }} minutes.
+                  {{ states('sensor.commutetime_calendar_event') | int + 15 }} minutes. I suggest getting ready to go since the expected travel time is {{ states('sensor.commutetime_evento_calendario') }} minutes. {{ meteo_alert }}
                 {% else %}
-                  15 minutes
+                  15 minutes.
                 {% endif %}     
       - conditions:
           - condition: or
@@ -90,8 +113,8 @@ actions:
                 {% endif %} that will start in {% if
                 states('sensor.commutetime_calendar_event') not in
                 ['unknown', 'unavailable'] %}
-                  {{ states('sensor.commutetime_calendar_event') | int + 15 }} minutes. I suggest getting ready to go since the expected travel time is {{ states('sensor.commutetime_evento_calendario') }} minutes.
+                  {{ states('sensor.commutetime_calendar_event') | int + 15 }} minutes. I suggest getting ready to go since the expected travel time is {{ states('sensor.commutetime_evento_calendario') }} minutes. {{ meteo_alert }}
                 {% else %}
-                  15 minutes
+                  15 minutes.
                 {% endif %}
 mode: single
