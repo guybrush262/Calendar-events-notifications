@@ -10,6 +10,7 @@ Moreover, the automation notifies about the weather condition.
 The following integrations are propedeutical for doing that:
 - Google Calendar
 - Google Maps Travel Time
+- Pirate Weather
 
 So I created:
 - "input_text.last_notified_event" in which the last notified event is reported. Directly updated through the automation.
